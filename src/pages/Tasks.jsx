@@ -1,62 +1,90 @@
 import React, { useState } from 'react';
 import { MoreHorizontal, Plus, X } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useData } from '../context/DataContext';
 import './Tasks.css';
 
-const initialColumns = [
-  {
-    id: 'todo',
-    title: 'To Do',
-    tasks: [
-      { id: 1, title: 'Design landing page', tag: 'Design', tagColor: '#8B5CF6' },
-      { id: 2, title: 'Create user flow', tag: 'UX', tagColor: '#06B6D4' },
-    ]
-  },
-  {
-    id: 'in-progress',
-    title: 'In Progress',
-    tasks: [
-      { id: 3, title: 'Develop backend API', tag: 'Dev', tagColor: '#10B981' },
-    ]
-  },
-  {
-    id: 'review',
-    title: 'Review',
-    tasks: [
-      { id: 4, title: 'Dashboard components', tag: 'Frontend', tagColor: '#F59E0B' },
-    ]
-  },
-  {
-    id: 'done',
-    title: 'Done',
-    tasks: [
-      { id: 5, title: 'Setup project repository', tag: 'DevOps', tagColor: '#EF4444' },
-    ]
-  }
-];
+// Draggable Task Card
+const TaskCard = ({ task, onDragStart }) => {
+  return (
+    <div 
+      className="task-card"
+      draggable
+      onDragStart={(e) => onDragStart(e, task.id)}
+    >
+      <div className="task-tag" style={{ backgroundColor: `${task.tagColor}20`, color: task.tagColor }}>
+        {task.tag}
+      </div>
+      <h4>{task.title}</h4>
+      <div className="task-footer">
+        <div className="avatar small">JD</div>
+      </div>
+    </div>
+  );
+};
+
+// Droppable Column
+const KanbanColumn = ({ column, onDrop, onDragOver }) => {
+  return (
+    <div 
+      className="kanban-column glass-panel"
+      onDrop={(e) => onDrop(e, column.id)}
+      onDragOver={onDragOver}
+    >
+      <div className="column-header">
+        <h3>{column.title} <span>{column.tasks.length}</span></h3>
+        <button className="icon-btn" onClick={() => toast('Column settings', { icon: '⚙️' })}>
+          <MoreHorizontal size={18} />
+        </button>
+      </div>
+      
+      <div className="task-list" style={{ minHeight: '300px' }}>
+        {column.tasks.map((task) => (
+          <TaskCard 
+            key={task.id} 
+            task={task} 
+            onDragStart={onDragStart} 
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Expose onDragStart function outside component scope for cleaner props passing
+let draggedTaskId = null;
+const onDragStart = (e, taskId) => {
+  draggedTaskId = taskId;
+  // This is required for Firefox to enable dragging
+  e.dataTransfer.setData('text/plain', taskId);
+  e.dataTransfer.effectAllowed = 'move';
+};
 
 const Tasks = () => {
-  const [columns, setColumns] = useState(initialColumns);
+  const { columns, moveTask, handleAddTask } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', tag: 'Task', tagColor: '#8B5CF6', columnId: 'todo' });
 
-  const handleAddTask = (e) => {
+  const onDragOver = (e) => {
+    e.preventDefault(); // Necessary to allow dropping
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const onDrop = (e, columnId) => {
     e.preventDefault();
-    if (!newTask.title.trim()) return;
+    if (draggedTaskId) {
+      moveTask(draggedTaskId, columnId);
+      draggedTaskId = null;
+    }
+  };
 
-    const taskItem = {
-      id: Date.now(),
-      title: newTask.title,
-      tag: newTask.tag,
-      tagColor: newTask.tagColor
-    };
-
-    setColumns(columns.map(col => {
-      if (col.id === newTask.columnId) {
-        return { ...col, tasks: [...col.tasks, taskItem] };
-      }
-      return col;
-    }));
-
+  const submitTask = (e) => {
+    e.preventDefault();
+    if (!newTask.title.trim()) {
+      toast.error('Task title is required');
+      return;
+    }
+    handleAddTask(newTask);
     setNewTask({ title: '', tag: 'Task', tagColor: '#8B5CF6', columnId: 'todo' });
     setIsModalOpen(false);
   };
@@ -73,26 +101,12 @@ const Tasks = () => {
 
       <div className="kanban-container">
         {columns.map((col) => (
-          <div key={col.id} className="kanban-column glass-panel">
-            <div className="column-header">
-              <h3>{col.title} <span>{col.tasks.length}</span></h3>
-              <button className="icon-btn"><MoreHorizontal size={18} /></button>
-            </div>
-            
-            <div className="task-list">
-              {col.tasks.map((task) => (
-                <div key={task.id} className="task-card">
-                  <div className="task-tag" style={{ backgroundColor: `${task.tagColor}20`, color: task.tagColor }}>
-                    {task.tag}
-                  </div>
-                  <h4>{task.title}</h4>
-                  <div className="task-footer">
-                    <div className="avatar small">JD</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <KanbanColumn 
+            key={col.id} 
+            column={col} 
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+          />
         ))}
       </div>
 
@@ -105,7 +119,7 @@ const Tasks = () => {
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleAddTask}>
+            <form onSubmit={submitTask}>
               <div className="form-group">
                 <label>Task Title</label>
                 <input 

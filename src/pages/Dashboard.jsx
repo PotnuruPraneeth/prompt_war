@@ -1,12 +1,20 @@
 import React from 'react';
 import { TrendingUp, Users, CheckCircle, Clock } from 'lucide-react';
+import { useData } from '../context/DataContext';
 import './Dashboard.css';
 
 const Dashboard = () => {
+  const { columns, teamMembers, recentActivity } = useData();
+
+  // Calculate dynamic stats
+  const totalTasksCount = columns.reduce((acc, col) => acc + col.tasks.length, 0);
+  const inProgressCount = columns.find(col => col.id === 'in-progress')?.tasks.length || 0;
+  const teamMembersCount = teamMembers.length;
+
   const stats = [
-    { title: 'Total Tasks', value: '42', icon: CheckCircle, color: '#8B5CF6' },
-    { title: 'In Progress', value: '12', icon: Clock, color: '#06B6D4' },
-    { title: 'Team Members', value: '8', icon: Users, color: '#10B981' },
+    { title: 'Total Tasks', value: totalTasksCount, icon: CheckCircle, color: '#8B5CF6' },
+    { title: 'In Progress', value: inProgressCount, icon: Clock, color: '#06B6D4' },
+    { title: 'Team Members', value: teamMembersCount, icon: Users, color: '#10B981' },
     { title: 'Productivity', value: '+14%', icon: TrendingUp, color: '#F59E0B' },
   ];
 
@@ -35,15 +43,18 @@ const Dashboard = () => {
         <div className="glass-panel recent-activity">
           <h2>Recent Activity</h2>
           <div className="activity-list">
-            {[1, 2, 3].map((_, i) => (
-              <div key={i} className="activity-item">
+            {recentActivity.map((activity) => (
+              <div key={activity.id} className="activity-item">
                 <div className="activity-dot"></div>
                 <div className="activity-details">
-                  <p><strong>Sarah</strong> completed task <em>"Update homepage design"</em></p>
-                  <span className="time">2 hours ago</span>
+                  <p><strong>{activity.user}</strong> {activity.action}</p>
+                  <span className="time">{activity.time}</span>
                 </div>
               </div>
             ))}
+            {recentActivity.length === 0 && (
+              <p className="text-muted">No recent activity.</p>
+            )}
           </div>
         </div>
         

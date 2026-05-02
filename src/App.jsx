@@ -7,6 +7,7 @@ import Tasks from './pages/Tasks';
 import Messages from './pages/Messages';
 import Team from './pages/Team';
 import AIChatBot from './components/AIChatBot';
+import { Toaster } from 'react-hot-toast';
 import './App.css'; // Just keeping it for component specific, will create or overwrite it
 
 function App() {
@@ -26,6 +27,16 @@ function App() {
         </main>
       </div>
       <AIChatBot />
+      <Toaster 
+        position="bottom-center"
+        toastOptions={{
+          style: {
+            background: 'var(--bg-surface)',
+            color: 'var(--text-main)',
+            border: '1px solid var(--border-color)',
+          },
+        }}
+      />
     </div>
   );
 }

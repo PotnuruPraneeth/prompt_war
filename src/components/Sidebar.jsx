@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, CheckSquare, MessageSquare, Users, Settings, Hexagon } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const Sidebar = () => {
   const navItems = [
@@ -31,10 +32,14 @@ const Sidebar = () => {
       </nav>
 
       <div className="nav-links" style={{ flex: 'none', marginTop: 'auto' }}>
-        <a href="#" className="nav-item">
+        <button 
+          className="nav-item" 
+          style={{ width: '100%', textAlign: 'left' }}
+          onClick={() => toast('Settings panel coming soon!', { icon: '⚙️' })}
+        >
           <Settings size={20} />
           <span>Settings</span>
-        </a>
+        </button>
       </div>
     </aside>
   );

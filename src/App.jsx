@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Messages from './pages/Messages';
 import Team from './pages/Team';
+import AIChatBot from './components/AIChatBot';
 import './App.css'; // Just keeping it for component specific, will create or overwrite it
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
           </Routes>
         </main>
       </div>
+      <AIChatBot />
     </div>
   );
 }
